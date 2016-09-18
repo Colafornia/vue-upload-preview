@@ -1,0 +1,117 @@
+.upload-area {
+  background: #f5f5f5;
+  height: 150px;
+  text-align: center;
+  color: #666;
+  font-size: 16px;
+  cursor: pointer;
+  border: 2px dashed #CBCBCB;
+}
+.upload-area p{
+  display: block;
+  padding-top: 35px;
+  font-size: 20px;
+}
+.upload-area.hovered {
+  background-color: #ddd;
+}
+.upload-file-input {
+  display: none;
+}
+.upload-img-btn {
+  margin-left: 15px;
+}
+.preview-part {
+  position: relative;
+}
+.image-preview {
+  height: 120px;
+  width: 180px;
+  margin-top: -120px;
+}
+.image-preview .arrow {
+  left: 15%;
+}
+.image-preview .popover-content {
+  height: 100%;
+  width: 100%;
+  background-size: contain;
+  background-repeat: no-repeat;
+}
+.size-part {
+  position: relative;
+}
+.size-popover {
+  height: 115px;
+  width: 230px;
+  margin-top: -120px;
+  margin-left: -42px;
+}
+.size-popover .close {
+  margin: 3px 10px 0 0;
+}
+button, .glyphicon{
+  cursor: pointer;
+}
+button.btn-default {
+  padding: 0 20px;
+  height: 30px;
+  border-radius: 0;
+  border: none;
+  cursor: pointer;
+  line-height: 1;
+  background-color: white;
+  color: #909090;
+}
+.orange-font {
+  color: #FA734F;
+}
+button.orange-bg {
+  background-color: #FA734F;
+  color: white;
+}
+textarea {
+ width: 2em;
+ height: 2em;
+ position: fixed;
+ left: 0;
+ top: 0;
+ background: transparent;
+}
+.modal-part {
+  position: absolute;
+  top: 30%;
+  left: 30%;
+  width: 40%;
+  background: white;
+}
+.progeress {
+  background-color: #ccc;
+}
+.progress-mask {
+  width: 100%;
+  height: 100vh;
+  background-color: #000;
+  position: fixed;
+  opacity: 0.6;
+  left: 0px;
+  top: 0px;
+}
+.progress-bar {
+  opacity: 1;
+  position: relative;
+}
+.alert.top-right {
+  top: 60px;
+}
+.image-new-dimension input {
+  width: 50px;
+}
+.save-btn {
+  height: 24px;
+  line-height: 0.5;
+  font-size: 13px;
+}
+.compress-checkbox {
+  margin-right: 20px;
+}
