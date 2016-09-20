@@ -1,32 +1,50 @@
 <template>
-  <form role="form" method="POST" class="file-upload-form form-horizontal" action="/god/upload_pic" enctype="multipart/form-data" encoding="multipart/form-data" autocomplete="off">
-    <div id="upload-area" class="upload-area" @dragover.prevent @drop.prevent="onFileChange" @dragenter="hovering = true"
-         @dragleave="hovering = false" :class="{'hovered': hovering}">
-      <input type="file" id="upload-file-input" class="form-control hide" @change="onFileChange" multiple>
-      <button type="button" class="btn btn-default upload-img-btn orange-bg" @click.prevent="uploadFileList(fileList)" v-show="fileList.length && toUploadNum">上传已选择的图片</button>
+  <form role="form" class="file-upload-form" enctype="multipart/form-data" encoding="multipart/form-data" autocomplete="off">
+    <div id="upload-area" class="upload-area" @dragover.prevent @drop.prevent="onFileChange">
+      <input type="file" :id="$parent.id" class="hide" @change="onFileChange" :multiple="$parent.multiple" :store="$parent.store">
     </div>
   </form>
 </template>
 <script>
 export default {
-  el: '#file-upload',
-  data: {
-    hovering: false,
-    fileList: [],
-    historyList: [],
-    storeList: []
+  data() {
+    return {
+      files: [],
+      historyList: [],
+      storeList: []
+    }
+  },
+  props: {
+    multiple: {
+      type: Boolean,
+      default: false
+    },
+    id: {
+      type: String,
+      default: 'file'
+    },
+    dropable: {
+      type: Boolean,
+      default: false
+    },
+    sizeLimit: {
+      type: Number
+    },
+    store: {
+      type: Boolean,
+      default: false
+    }
   },
   methods: {
-    addFile () {
-      document.getElementById('upload-file-input').click()
-    },
     onFileChange (e) {
       const files = e.target.files || e.dataTransfer.files
       for (let i = 0; i < files.length; i++) this.previewFile(files[i])
-      document.getElementById('upload-pic-input').value = ''
+      /*document.getElementById('upload-pic-input').value = ''*/
+      this.$destroy()
     },
     previewFile (file) {
       const fileSize = (file.size / (1024 * 1024)).toFixed(2)
+      if (this.sizeLimit && this.sizeLimit < fileSize) return
       const reader = new FileReader()
       reader.addEventListener('load', (e) => {
         const imageSrc = e.target.result
@@ -56,11 +74,11 @@ export default {
           })
           image.src = reader.result
         } else {
-          this.alert = {
+          /*this.alert = {
             show: true,
             type: 'warning',
             msg: '注意：你选择的是非图片文件'
-          }
+          }*/
           const fileInfo = {
             file: file,
             name: file.name,
@@ -77,7 +95,8 @@ export default {
       reader.readAsDataURL(file)
     },
     addFileItem (file) {
-      this.fileList.push(file)
+      this.files.push(file)
+      console.log(this.files)
     },
     removeFileItem (index) {
       this.fileList.splice(index, 1)
@@ -177,3 +196,10 @@ export default {
   }
 }
 </script>
+<style scoped>
+.upload-area {
+  height: 100px;
+  width: 100px;
+  background-color: #grey;
+}
+</style>
