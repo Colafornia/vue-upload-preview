@@ -23,6 +23,9 @@ export default {
       type: String,
       default: 'file'
     },
+    uploadUrl: {
+      type: String
+    },
     dropable: {
       type: Boolean,
       default: false
@@ -36,7 +39,6 @@ export default {
     }
   },
   methods: {
-
     _uploadEvents(name, file) {
       this.$dispatch && this.$dispatch(name, file);
     },
@@ -61,19 +63,9 @@ export default {
               file: file,
               src: imageSrc,
               name: file.name,
-              original: {
-                name: file.name,
-                width: image.width,
-                height: image.height
-              },
               height: image.height,
               width: image.width,
               size: fileSize,
-              isCompress: true,
-              showPre: false,
-              showNameInput: false,
-              showDimensionInput: false,
-              showSizePopover: false,
               isUploaded: false
             }
             this._addFileItem(imageInfo)
@@ -84,11 +76,7 @@ export default {
           const fileInfo = {
             file: file,
             name: file.name,
-            original: {
-              name: file.name
-            },
             size: fileSize,
-            showNameInput: false,
             isUploaded: false
           }
           this._addFileItem(fileInfo)
@@ -110,12 +98,10 @@ export default {
     _formatFileList (fileList) {
       for (let i = 0; i < file; i++) {
         if (!this.fileList[i].isUploaded) {
-          this.progressBar.show = true
           const uploadFile = fileList[i].file
           const uploadInfo = Object.assign({}, this.fileList[i])
           if (uploadInfo.src) uploadInfo.src = undefined
           uploadInfo.file = undefined
-          uploadInfo.isNameChanged = uploadInfo.name !== uploadInfo.original.name
           const formData = new FormData()
           formData.append('imageInfo', JSON.stringify(uploadInfo))
           formData.append('imageFile', uploadFile)
@@ -125,8 +111,10 @@ export default {
     },
 
     _uploadFileList (formData) {
+      if (!this.uploadUrl) return
+      const url = this.uploadUrl
       $.ajax({
-        url: '/god/upload_pic',
+        url: this.uploadUrl,
         type: 'POST',
         data: formData,
         processData: false,
@@ -141,11 +129,7 @@ export default {
           try {
             // 避免当返回html报错信息时，JSON.parse操作会引发Unexpected token 错误
             const errorObj = JSON.parse(e.responseText)
-            this.alert = {
-              show: true,
-              type: 'danger',
-              msg: errorObj.msg
-            }
+            this._uploadEvents('throwError', errorObj.msg);
           } catch (e) {
             this.alert = {
               show: true,
