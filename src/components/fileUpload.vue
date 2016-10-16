@@ -1,7 +1,7 @@
 <template>
   <form role="form" class="file-upload-form" enctype="multipart/form-data" encoding="multipart/form-data" autocomplete="off">
-    <div id="upload-area" class="upload-area" @dragover.prevent @drop.prevent="onFileChange">
-      <input type="file" :id="$parent.id" class="hide" @change="onFileChange" :multiple="$parent.multiple" :store="$parent.store">
+    <div id="upload-area" class="upload-area" @dragover.prevent @drop.prevent="_onFileChange">
+      <input type="file" :id="$parent.id" class="hide" @change="_onFileChange" :multiple="$parent.multiple" :store="$parent.store">
     </div>
   </form>
 </template>
@@ -36,19 +36,25 @@ export default {
     }
   },
   methods: {
-    onFileChange (e) {
+
+    _uploadEvents(name, file) {
+      this.$dispatch && this.$dispatch(name, file);
+    },
+
+    _onFileChange (e) {
       const files = e.target.files || e.dataTransfer.files
-      for (let i = 0; i < files.length; i++) this.previewFile(files[i])
-      /*document.getElementById('upload-pic-input').value = ''*/
+      for (let i = 0; i < files.length; i++) this._previewFile(files[i])
       this.$destroy()
     },
-    previewFile (file) {
+
+    _previewFile (file) {
       const fileSize = (file.size / (1024 * 1024)).toFixed(2)
       if (this.sizeLimit && this.sizeLimit < fileSize) return
       const reader = new FileReader()
       reader.addEventListener('load', (e) => {
         const imageSrc = e.target.result
         if (file.type.indexOf('image') !== -1) {
+          // 图片文件
           const image = new Image()
           image.addEventListener('load', () => {
             const imageInfo = {
@@ -70,15 +76,11 @@ export default {
               showSizePopover: false,
               isUploaded: false
             }
-            this.addFileItem(imageInfo)
+            this._addFileItem(imageInfo)
           })
           image.src = reader.result
         } else {
-          /*this.alert = {
-            show: true,
-            type: 'warning',
-            msg: '注意：你选择的是非图片文件'
-          }*/
+          // 非图片文件
           const fileInfo = {
             file: file,
             name: file.name,
@@ -89,21 +91,23 @@ export default {
             showNameInput: false,
             isUploaded: false
           }
-          this.addFileItem(fileInfo)
+          this._addFileItem(fileInfo)
         }
       })
       reader.readAsDataURL(file)
     },
-    addFileItem (file) {
+
+    _addFileItem (file) {
       this.files.push(file)
       console.log(this.files)
+      this._uploadEvents('filesToUpload', this.files);
     },
-    removeFileItem (index) {
+
+    _removeFileItem (index) {
       this.fileList.splice(index, 1)
     },
-    uploadFileList (fileList) {
-      let fileHaveUploadedNum = 0
-      let fileToUploadNum = file
+
+    _formatFileList (fileList) {
       for (let i = 0; i < file; i++) {
         if (!this.fileList[i].isUploaded) {
           this.progressBar.show = true
@@ -115,56 +119,54 @@ export default {
           const formData = new FormData()
           formData.append('imageInfo', JSON.stringify(uploadInfo))
           formData.append('imageFile', uploadFile)
-          $.ajax({
-            url: '/god/upload_pic',
-            type: 'POST',
-            data: formData,
-            processData: false,
-            contentType: false
-          })
-            .done((url) => {
-              fileHaveUploadedNum = fileHaveUploadedNum + 1
-              this.progressBar.number = (fileHaveUploadedNum * 100 / fileToUploadNum).toFixed(2) + '%'
-              Vue.set(this.fileList[i], 'url', url)
-              this.fileList[i].isUploaded = true
-              if (fileHaveUploadedNum === fileToUploadNum) this.progressBar.show = false
-              this.storeUploadedHistroy(this.fileList[i])
-            })
-            .fail((e) => {
-              fileToUploadNum = fileToUploadNum - 1
-              this.progressBar.show = false
-              try {
-                // 避免当返回html报错信息时，JSON.parse操作会引发Unexpected token 错误
-                const errorObj = JSON.parse(e.responseText)
-                this.alert = {
-                  show: true,
-                  type: 'danger',
-                  msg: errorObj.msg
-                }
-              } catch (e) {
-                this.alert = {
-                  show: true,
-                  type: 'danger',
-                  msg: '上传失败！'
-                }
-              }
-            })
-        } else {
-          fileToUploadNum = fileToUploadNum - 1
+          this._uploadFileList(formData)
         }
       }
     },
-    storeUploadedHistroy (file) {
+
+    _uploadFileList (formData) {
+      $.ajax({
+        url: '/god/upload_pic',
+        type: 'POST',
+        data: formData,
+        processData: false,
+        contentType: false
+      })
+        .done((url) => {
+          Vue.set(this.fileList[i], 'url', url)
+          this.fileList[i].isUploaded = true
+          if (this.store) this.storeUploadedHistroy(this.fileList[i])
+        })
+        .fail((e) => {
+          try {
+            // 避免当返回html报错信息时，JSON.parse操作会引发Unexpected token 错误
+            const errorObj = JSON.parse(e.responseText)
+            this.alert = {
+              show: true,
+              type: 'danger',
+              msg: errorObj.msg
+            }
+          } catch (e) {
+            this.alert = {
+              show: true,
+              type: 'danger',
+              msg: '上传失败！'
+            }
+          }
+        })
+    },
+
+    _storeUploadedHistroy (file) {
       // localStorage里面不存file，预览用线上链接
       const storeItem = Object.assign({}, file)
       if (file.src) storeItem.src = file.url
       storeItem.file = undefined
       this.storeList.unshift(storeItem)
       if (this.store > 20) this.store = 20
-      localStorage.setItem('godUploadHistory', JSON.stringify(this.storeList))
+      localStorage.setItem('uploadHistory', JSON.stringify(this.storeList))
     },
-    copyUrl (url, index) {
-      this.alert.show = false
+
+    _copyUrl (url, index) {
       const textArea = document.createElement('textarea')
       textArea.value = url
       document.body.appendChild(textArea)
@@ -189,7 +191,7 @@ export default {
     }
   },
   ready () {
-    const historyData = localStorage.getItem('godUploadHistory')
+    const historyData = localStorage.getItem('uploadHistory')
     if (!historyData) return
     this.historyList = JSON.parse(historyData)
     this.storeList = this.historyList.slice()
