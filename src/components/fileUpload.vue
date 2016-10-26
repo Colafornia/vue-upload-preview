@@ -1,7 +1,7 @@
 <template>
   <form role="form" class="file-upload-form" enctype="multipart/form-data" encoding="multipart/form-data" autocomplete="off">
-    <div id="upload-area" class="upload-area" @dragover.prevent @drop.prevent="_onFileChange">
-      <input type="file" :id="$parent.id" class="hide" @change="_onFileChange" :multiple="$parent.multiple" :store="$parent.store">
+    <div id="upload-area" class="upload-area" @dragover.prevent @drop.prevent="_onFileChange" @click="_triggerUpload">
+      <input id="upload-input" type="file" class="hide" @change="_onFileChange" :multiple="$parent.multiple" :store="$parent.store">
     </div>
   </form>
 </template>
@@ -18,10 +18,6 @@ export default {
     multiple: {
       type: Boolean,
       default: false
-    },
-    id: {
-      type: String,
-      default: 'file'
     },
     uploadUrl: {
       type: String
@@ -41,6 +37,10 @@ export default {
   methods: {
     _uploadEvents(name, file) {
       this.$dispatch && this.$dispatch(name, file);
+    },
+
+    _triggerUpload(){
+      document.getElementById('upload-input').click()
     },
 
     _onFileChange (e) {
@@ -126,52 +126,18 @@ export default {
           if (this.store) this.storeUploadedHistroy(this.fileList[i])
         })
         .fail((e) => {
-          try {
-            // 避免当返回html报错信息时，JSON.parse操作会引发Unexpected token 错误
-            const errorObj = JSON.parse(e.responseText)
-            this._uploadEvents('throwError', errorObj.msg);
-          } catch (e) {
-            this.alert = {
-              show: true,
-              type: 'danger',
-              msg: '上传失败！'
-            }
-          }
+          const errorObj = JSON.parse(e.responseText)
+          this._uploadEvents('throwError', errorObj.msg);
         })
     },
 
     _storeUploadedHistroy (file) {
-      // localStorage里面不存file，预览用线上链接
       const storeItem = Object.assign({}, file)
       if (file.src) storeItem.src = file.url
       storeItem.file = undefined
       this.storeList.unshift(storeItem)
       if (this.store > 20) this.store = 20
       localStorage.setItem('uploadHistory', JSON.stringify(this.storeList))
-    },
-
-    _copyUrl (url, index) {
-      const textArea = document.createElement('textarea')
-      textArea.value = url
-      document.body.appendChild(textArea)
-      textArea.select()
-      // 针对不支持 document.execCommand 的旧版浏览器
-      try {
-        const isCopied = document.execCommand('copy')
-        if (isCopied) {
-          this.alert = {
-            show: true,
-            type: 'success',
-            msg: '上传文件链接已经复制到剪贴板'
-          }
-        }
-      } catch (e) {
-        this.alert = {
-          show: true,
-          type: 'danger',
-          msg: '链接复制失败，请手动复制' + url
-        }
-      }
     }
   },
   ready () {

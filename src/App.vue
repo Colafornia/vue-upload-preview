@@ -12,6 +12,12 @@ import bootstrap from 'bootstrap/dist/css/bootstrap.css'
 export default {
   components: {
     fileUpload
+  },
+  data () {
+    return {
+      multiple: true,
+      strore: false
+    }
   }
 }
 </script>
